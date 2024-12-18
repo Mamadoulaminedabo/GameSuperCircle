@@ -1,50 +1,40 @@
+
+// application.h
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include "sdl2.h"
 #include "constants.h"
+#include "sdl2.h"
 #include "menu.h"
+// #include <SDL2/SDL_mixer.h>
 
-// --------------- //
-// Data structures //
-// --------------- //
+// Déclaration de la variable globale navSound
+extern Mix_Chunk *navSound;
+
+extern Mix_Music *gameOverMusic;
 
 enum application_state {
-    APPLICATION_STATE_MENU, // We show the menu
-    APPLICATION_STATE_PLAY, // We are playing
-    APPLICATION_STATE_QUIT  // We are quitting
+    APPLICATION_STATE_MENU,
+    APPLICATION_STATE_PLAY,
+    APPLICATION_STATE_QUIT
 };
 
 struct application {
-    enum application_state state; // The current state
-    struct menu *menu;            // The home menu
-    SDL_Window* window;           // The window
-    SDL_Renderer* renderer;       // The renderer
+    enum application_state state;
+    struct menu *menu;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+
+    Mix_Music *menuMusic;
+    Mix_Music *gameMusic;
+    Mix_Music *gameOverMusic;
+
+    enum difficulty_level difficulty;
 };
 
-// --------- //
-// Functions //
-// --------- //
-
-/**
- * Creates a new application
- *
- * @return  A pointer to a new application, NULL if there was an error
- */
+// Prototypes des fonctions
 struct application *application_initialize();
-
-/**
- * Start running the application
- *
- * @param application  The application to run
- */
 void application_run(struct application *application);
-
-/**
- * Closes the given application
- *
- * @param application  The application to be closed
- */
 void application_shut_down(struct application *application);
 
-#endif
+#endif // APPLICATION_H
