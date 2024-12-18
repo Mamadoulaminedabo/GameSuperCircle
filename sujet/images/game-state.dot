@@ -1,0 +1,21 @@
+digraph {
+    // Global properties
+    rankdir = LR;
+    graph [overlap=scale];
+    node  [style=filled, color=darkseagreen1];
+    edge  [fontsize=10];
+    // Nodes
+    start [label="start", style=invis];
+    menu  [label="in menu"];
+    game  [label="playing\ngame"];
+    over  [label="game\nover"];
+    quit  [label="end\napplication"];
+    // Arcs
+    start -> menu [label="start the\napplication"];
+    menu  -> game [label="choose to\nplay"];
+    menu  -> quit [label="choose to\nquit"];
+    menu  -> quit [label="close the\nwindow"];
+    menu  -> menu [label="navigate\nin menu"];
+    game  -> over [label="collide\nwith wall"];
+    over  -> menu [label="return\n to menu"];
+}
