@@ -19,7 +19,7 @@ static Obstacle obstacles[MAX_OBSTACLES];
 static int obstacle_count = 0;
 static Zone zones[SEGMENT_COUNT];
 static float player_angle = 0.0f;
-float player_speed = 500.0f;
+float player_speed = 250.0f;
 static const float orange_circle_radius = 38.0f;
 static const float player_rotational_radius = 45.0f;
 static const float player_size = 10.0f;
@@ -32,6 +32,8 @@ void set_current_difficulty(enum difficulty_level diff)
 {
     current_difficulty = diff;
 }
+
+
 bool init_game(SDL_Window *window_param, SDL_Renderer *renderer_param)
 {
     window = window_param;
@@ -57,6 +59,8 @@ bool init_game(SDL_Window *window_param, SDL_Renderer *renderer_param)
     return true;
 }
 
+
+
 void init_zones()
 {
     float angle_per_segment = 360.0f / SEGMENT_COUNT;
@@ -67,100 +71,74 @@ void init_zones()
     }
 }
 
+
+// Fonction auxiliaire pour créer un obstacle
+static void create_obstacle(int zone_index, float *player_speed)
+{
+    // Vérifier qu'on ne dépasse pas le tableau d'obstacles
+    if (obstacle_count >= MAX_OBSTACLES)
+        return;
+
+    Obstacle *obs = &obstacles[obstacle_count++];
+    obs->segment_index = zone_index;
+    Zone *zone = &zones[zone_index];
+
+    obs->width = zone->width * 1.0f;
+    float zone_center_angle = zone->start_angle + zone->width / 2.0f;
+    obs->angle = zone_center_angle - obs->width / 2.0f;
+
+    float difficulty_factor;
+    switch (current_difficulty)
+    {
+    case DIFF_EASY:
+        difficulty_factor = 0.75f;
+        if (player_speed) *player_speed = 200.0f; 
+        break;
+    case DIFF_MEDIUM:
+        difficulty_factor = 1.0f;
+        if (player_speed) *player_speed = 250.0f; 
+        break;
+    case DIFF_HARD:
+        difficulty_factor = 2.0f;
+        if (player_speed) *player_speed = 300.0f; 
+        break;
+    }
+
+    obs->speed = 150.0f * difficulty_factor;
+    obs->distance = HALF_SCREEN_WIDTH;
+}
+
+
+
 void spawn_arc_obstacles()
 {
-    // Nombre de zones qui formeront l'arc
-    // Vous pouvez le rendre aléatoire entre 2 et 4, par exemple.
-    int arc_zones = 1 + (rand() % 3); // Va donner 2, 3 ou 4
-
-    // Choisir une zone de départ aléatoire
+    int arc_zones = 2 + (rand() % 3); // Va donner 2, 3 ou 4
     int start_zone = rand() % SEGMENT_COUNT;
 
-    // Pour créer un demi-cercle, idéalement arc_zones * zone->width ~ 180 degrés
-    // Mais on peut s’en contenter même sans calculer précisément.
     for (int i = 0; i < arc_zones; i++)
     {
         int zone_index = (start_zone + i) % SEGMENT_COUNT;
-
-        // Vérifier qu'on ne dépasse pas le tableau d'obstacles
-        if (obstacle_count >= MAX_OBSTACLES)
-            return;
-
-        Obstacle *obs = &obstacles[obstacle_count++];
-        obs->segment_index = zone_index;
-        Zone *zone = &zones[zone_index];
-
-        // Conserver la même logique pour l'angle et la largeur
-        obs->width = zone->width * 1.0f;
-        float zone_center_angle = zone->start_angle + zone->width / 2.0f;
-        obs->angle = zone_center_angle - obs->width / 2.0f;
-
-        // Ajuster la vitesse selon la difficulté
-        float difficulty_factor;
-        switch (current_difficulty)
-        {
-        case DIFF_EASY:
-            difficulty_factor = 0.75f;
-            break;
-        case DIFF_MEDIUM:
-            difficulty_factor = 1.0f;
-            break;
-        case DIFF_HARD:
-            difficulty_factor = 2.0f;
-            break;
-        }
-
-        obs->speed = 150.0f * difficulty_factor;
-        obs->distance = 400.0f;
+        // Ici, on ne modifie pas player_speed, donc passer NULL
+        create_obstacle(zone_index, NULL);
     }
 }
 
 void spawn_obstacle()
 {
-    // Logique standard ou aléatoire : soit on génère un arc, soit un seul obstacle
-    // Par exemple, 1 fois sur 3, on génère un arc
-    if (rand() % 3 == 0)
+    // 1 fois sur 3, on génère un arc
+    if (rand() % 5 == 0)
     {
-        // Générer un arc
         spawn_arc_obstacles();
     }
     else
     {
         // Générer un obstacle classique
-        if (obstacle_count < MAX_OBSTACLES)
-        {
-            Obstacle *obs = &obstacles[obstacle_count++];
-
-            int zone_index = rand() % SEGMENT_COUNT;
-            obs->segment_index = zone_index;
-            Zone *zone = &zones[zone_index];
-
-            obs->width = zone->width * 1.0f;
-            float zone_center_angle = zone->start_angle + zone->width / 2.0f;
-            obs->angle = zone_center_angle - obs->width / 2.0f;
-
-            float difficulty_factor;
-            switch (current_difficulty)
-            {
-            case DIFF_EASY:
-                difficulty_factor = 0.70f;
-                *(&player_speed) = 400.0f;
-                break;
-            case DIFF_MEDIUM:
-                difficulty_factor = 1.0f;
-                *(&player_speed) = 500.0f;
-                break;
-            case DIFF_HARD:
-                difficulty_factor = 1.8f;
-                *(&player_speed) = 600.0f;
-                break;
-            }
-
-            obs->speed = 150.0f * difficulty_factor;
-            obs->distance = 400.0f;
-        }
+        int zone_index = rand() % SEGMENT_COUNT;
+        // Ici, on modifie player_speed, donc on passe &player_speed
+        create_obstacle(zone_index, &player_speed);
     }
 }
+
 
 void update_obstacles(float delta_time)
 {
@@ -205,8 +183,8 @@ void update_obstacles(float delta_time)
 
 bool check_collision()
 {
-    float apex_x = 400 + cosf(player_angle * M_PI / 180.0f) * (player_rotational_radius + player_height);
-    float apex_y = 300 + sinf(player_angle * M_PI / 180.0f) * (player_rotational_radius + player_height);
+    float apex_x = HALF_SCREEN_WIDTH + cosf(player_angle * M_PI / 180.0f) * (player_rotational_radius + player_height);
+    float apex_y = HALF_SCREEN_HEIGHT + sinf(player_angle * M_PI / 180.0f) * (player_rotational_radius + player_height);
 
     // collision_factor < 1 : plus difficile de déclencher la collision sur les bords
     float collision_factor = 0.1f;
@@ -218,7 +196,7 @@ bool check_collision()
         float arc_start_angle = obs->angle;
         float arc_end_angle = obs->angle + obs->width;
 
-        float apex_angle = atan2f(apex_y - 300, apex_x - 400) * 180.0f / M_PI;
+        float apex_angle = atan2f(apex_y - HALF_SCREEN_HEIGHT, apex_x - HALF_SCREEN_WIDTH) * 180.0f / M_PI;
         if (apex_angle < 0)
         {
             apex_angle += 360.0f;
@@ -255,8 +233,8 @@ bool check_collision()
         }
 
         float closest_rad = closest_angle * M_PI / 180.0f;
-        float closest_x = 400 + cosf(closest_rad) * obs->distance;
-        float closest_y = 300 + sinf(closest_rad) * obs->distance;
+        float closest_x = HALF_SCREEN_WIDTH + cosf(closest_rad) * obs->distance;
+        float closest_y = HALF_SCREEN_HEIGHT + sinf(closest_rad) * obs->distance;
 
         float dx = apex_x - closest_x;
         float dy = apex_y - closest_y;
@@ -310,15 +288,10 @@ void run_game()
     SDL_Event event;
     Uint64 NOW = SDL_GetPerformanceCounter();
     Uint64 LAST = NOW;
-    // double delta_time = 0;
     float spawn_timer = 0.0f;
     bool game_over = false;
     float elapsed_time = 0.0f;
     bool running = true;
-
-    LAST = NOW;
-    NOW = SDL_GetPerformanceCounter();
-    double delta_time = (double)(NOW - LAST) / (double)SDL_GetPerformanceFrequency();
 
     player_angle = 0.0f;
     obstacle_count = 0;
@@ -342,15 +315,35 @@ void run_game()
         // Vous pouvez choisir de continuer sans arrière-plan ou de quitter
     }
 
+    // Configuration pour limiter les FPS
+    const int TARGET_FPS = 60;
+    const double FRAME_DELAY = 1000.0 / TARGET_FPS; // ~16.67 ms
+
     while (running)
     {
         LAST = NOW;
         NOW = SDL_GetPerformanceCounter();
-        delta_time = (double)((NOW - LAST) / (double)SDL_GetPerformanceFrequency());
+        double delta_time = (double)(NOW - LAST) / (double)SDL_GetPerformanceFrequency();
 
+        // Gestion des événements utilisateur
         while (SDL_PollEvent(&event))
         {
-            handle_input(event, &running, &player_angle, player_speed, (float)delta_time);
+            handle_input(event, &running);
+        }
+
+        // Obtenir l'état actuel du clavier
+        const Uint8* state = SDL_GetKeyboardState(NULL);
+        if (state[SDL_SCANCODE_LEFT]) {
+            player_angle -= player_speed * delta_time;
+            if (player_angle < 0.0f) {
+                player_angle += 360.0f;
+            }
+        }
+        if (state[SDL_SCANCODE_RIGHT]) {
+            player_angle += player_speed * delta_time;
+            if (player_angle >= 360.0f) {
+                player_angle -= 360.0f;
+            }
         }
 
         if (!running)
@@ -378,37 +371,55 @@ void run_game()
             }
         }
 
+        // Rendu
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         if (!game_over)
         {
-            draw_background_segments(renderer, 400, 300, 800, zones, SEGMENT_COUNT);
-            draw_circle(renderer, 400, 300, (int)orange_circle_radius, 100, 100, 100, 255);
+            draw_background_segments(renderer, HALF_SCREEN_WIDTH, HALF_SCREEN_HEIGHT, 800, zones, SEGMENT_COUNT);
+            draw_circle(renderer, HALF_SCREEN_WIDTH, HALF_SCREEN_HEIGHT, (int)orange_circle_radius, 100, 100, 100, 255);
             for (int i = 0; i < obstacle_count; ++i)
             {
                 Obstacle *obs = &obstacles[i];
-                draw_arc(renderer, 400, 300, (int)obs->distance,
-                         obs->angle,
-                         obs->angle + obs->width,
-                         255, 0, 0, 255, ARC_THICKNESS);
+                draw_arc(renderer, HALF_SCREEN_WIDTH, HALF_SCREEN_HEIGHT, (int)obs->distance,
+                        obs->angle,
+                        obs->angle + obs->width,
+                        255, 0, 0, 255, ARC_THICKNESS);
             }
-            float px = 400 + cosf(player_angle * M_PI / 180.0f) * player_rotational_radius;
-            float py = 300 + sinf(player_angle * M_PI / 180.0f) * player_rotational_radius;
+            float px = HALF_SCREEN_WIDTH + cosf(player_angle * M_PI / 180.0f) * player_rotational_radius;
+            float py = HALF_SCREEN_HEIGHT + sinf(player_angle * M_PI / 180.0f) * player_rotational_radius;
             draw_player_triangle(renderer, px, py, player_angle);
 
-            char timer_text[10];
-            snprintf(timer_text, sizeof(timer_text), "%.1f", elapsed_time);
+            // Formatage conditionnel du timer
+            char timer_text[20]; // Suffisant pour "MM:SS.S"
+            if (elapsed_time < 60.0f)
+            {
+                // Affichage en secondes avec une décimale
+                snprintf(timer_text, sizeof(timer_text), "%.1f", elapsed_time);
+            }
+            else
+            {
+                // Calcul des minutes et secondes
+                int minutes = (int)(elapsed_time / 60.0f);
+                float sec_remainder = elapsed_time - (minutes * 60.0f);
+                // Affichage en minutes:secondes avec une décimale
+                snprintf(timer_text, sizeof(timer_text), "%d:%.1f", minutes, sec_remainder);
+            }
+
+            // Calculer la largeur du texte
             int text_length = (int)strlen(timer_text);
             int digit_width = (int)(digits_spritesheet->sprite_width * scale);
             int total_width = text_length * digit_width;
             int x_position = SCREEN_WIDTH - total_width - 10;
             int y_position = 10;
+
+            // Rendre le numéro
             render_number(digits_spritesheet, timer_text, x_position, y_position, scale);
         }
         else
         {
-            // attendre 2 secondes avant de quitter
+            // Attendre 2 secondes avant de quitter
             SDL_Delay(2000);
 
             char game_over_text[100];
@@ -469,8 +480,8 @@ void run_game()
                 {
                     SDL_QueryTexture(instructions_texture, NULL, NULL, &inst_width, &inst_height);
                     SDL_Rect inst_rect = {(SCREEN_WIDTH - inst_width) / 2,
-                                          (SCREEN_HEIGHT - inst_height) / 2 + 180,
-                                          inst_width, inst_height};
+                                        (SCREEN_HEIGHT - inst_height) / 2 + 180,
+                                        inst_width, inst_height};
                     SDL_RenderCopy(renderer, instructions_texture, NULL, &inst_rect);
                     SDL_DestroyTexture(instructions_texture);
                 }
@@ -483,6 +494,13 @@ void run_game()
         }
 
         SDL_RenderPresent(renderer);
+
+        // Gestion du délai pour limiter les FPS (optionnel)
+        Uint32 frame_time = SDL_GetTicks() - (LAST / SDL_GetPerformanceFrequency() * 1000); // Approximation
+        if (frame_time < FRAME_DELAY)
+        {
+            SDL_Delay(FRAME_DELAY - frame_time);
+        }
     }
 
     // Libérer la texture de Game Over
@@ -493,6 +511,7 @@ void run_game()
 
     spritesheet_delete(digits_spritesheet);
 }
+
 void clean_game()
 {
     if (font)
