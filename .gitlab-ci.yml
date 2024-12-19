@@ -18,9 +18,4 @@ build:
   stage: build
   script:
     - echo "Compilation du projet..."
-    - cd src ; make
-  artifacts:
-    # Conserver l'exécutable pour une utilisation ultérieure ou pour téléchargement
-    paths:
-      - circles
-    expire_in: 1 hour
+    - cd src ; make all
