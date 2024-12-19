@@ -2,7 +2,7 @@ CC = gcc
 
 # Utiliser pkg-config pour obtenir les flags d'inclusion et de liaison
 CFLAGS = -Wall $(shell pkg-config --cflags sdl2 SDL2_mixer SDL2_ttf SDL2_image) -I./libs
-LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_mixer SDL2_ttf SDL2_image)
+LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_mixer SDL2_ttf SDL2_image) -lm
 
 # Liste des fichiers sources et objets
 OBJS = $(patsubst %.c,%.o,$(wildcard *.c))
