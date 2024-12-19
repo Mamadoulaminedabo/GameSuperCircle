@@ -3,12 +3,6 @@
 
 #include "sdl2.h"
 #include "constants.h"
-#include <stdbool.h>
-
-
-// --------------- //
-// Data structures //
-// --------------- //
 
 enum menu_state {
     MENU_PLAY_FOCUS,
@@ -35,34 +29,8 @@ struct menu {
     enum difficulty_level selected_difficulty; 
 };
 
-// --------- //
-// Functions //
-// --------- //
-
-/**
- * Creates a new menu.
- *
- * @param renderer  The renderer
- * @return          A pointer to the menu, NULL if there was an error
- */
 struct menu *menu_initialize(SDL_Renderer *renderer);
-
-/**
- * Start running the menu.
- *
- * @param menu  The menu to show
- */
 void menu_run(struct menu *menu);
-
-/**
- * Delete the menu.
- *
- * @param menu  The menu to delete
- */
 void menu_delete(struct menu *menu);
-
-
-int menu_alpha(bool chosen);
-
 
 #endif

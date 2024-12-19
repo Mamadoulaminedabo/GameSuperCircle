@@ -1,12 +1,9 @@
-
-// application.h
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
 #include "constants.h"
 #include "sdl2.h"
 #include "menu.h"
-// #include <SDL2/SDL_mixer.h>
 
 // Déclaration de la variable globale navSound
 extern Mix_Chunk *navSound;
@@ -32,25 +29,9 @@ struct application {
     enum difficulty_level difficulty;
 };
 
-/**
- * Creates a new application
- *
- * @return  A pointer to a new application, NULL if there was an error
- */
+// Prototypes des fonctions
 struct application *application_initialize();
-
-/**
- * Start running the application
- *
- * @param application  The application to run
- */
 void application_run(struct application *application);
-
-/**
- * Closes the given application
- *
- * @param application  The application to be closed
- */
 void application_shut_down(struct application *application);
 
 #endif // APPLICATION_H

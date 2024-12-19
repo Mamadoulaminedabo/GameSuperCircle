@@ -1,3 +1,4 @@
+// game.c
 #include "game.h"
 #include "graphics.h"
 #include "input.h"
@@ -32,8 +33,6 @@ void set_current_difficulty(enum difficulty_level diff)
 {
     current_difficulty = diff;
 }
-
-
 bool init_game(SDL_Window *window_param, SDL_Renderer *renderer_param)
 {
     window = window_param;
@@ -59,8 +58,6 @@ bool init_game(SDL_Window *window_param, SDL_Renderer *renderer_param)
     return true;
 }
 
-
-
 void init_zones()
 {
     float angle_per_segment = 360.0f / SEGMENT_COUNT;
@@ -70,7 +67,6 @@ void init_zones()
         zones[i].width = angle_per_segment;
     }
 }
-
 
 // Fonction auxiliaire pour créer un obstacle
 static void create_obstacle(int zone_index, float *player_speed)
@@ -108,8 +104,6 @@ static void create_obstacle(int zone_index, float *player_speed)
     obs->distance = HALF_SCREEN_WIDTH;
 }
 
-
-
 void spawn_arc_obstacles()
 {
     int arc_zones = 2 + (rand() % 3); // Va donner 2, 3 ou 4
@@ -138,7 +132,6 @@ void spawn_obstacle()
         create_obstacle(zone_index, &player_speed);
     }
 }
-
 
 void update_obstacles(float delta_time)
 {
