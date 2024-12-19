@@ -1,0 +1,29 @@
+# .gitlab-ci.yml
+
+image: gcc:latest
+
+# Définir les variables globales si nécessaire
+variables:
+  # Vous pouvez ajouter d'autres variables globales ici si nécessaire
+
+stages:
+  - build
+
+before_script:
+  # Mettre à jour la liste des paquets de manière silencieuse
+  - apt-get update -qq
+
+  # Installer les outils de construction essentiels et les dépendances SDL2
+    - apt-get update -qq
+    - apt-get install -y build-essential libsdl2-dev libsdl2-mixer-dev libsdl2-ttf-dev libsdl2-image-dev libsdl2-gfx-dev pkg-config
+
+build:
+  stage: build
+  script:
+    - echo "Compilation du projet..."
+    - cd src ; make
+  artifacts:
+    # Conserver l'exécutable pour une utilisation ultérieure ou pour téléchargement
+    paths:
+      - circles
+    expire_in: 1 hour
